@@ -26,7 +26,7 @@ sub startup {
   $r->put('/')->to(cb => sub {
     my $c = shift;
     my $keys = scalar keys %$mcache;
-    $self->log->debug("Storing $keys keys");
+    $c->log->debug("Storing $keys keys");
     store $mcache, $file;
     $c->render(json => {stored => $keys});
   });
