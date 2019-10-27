@@ -17,3 +17,21 @@ post '/:table' => {table => 'default'} => sub {
 };
 
 app->start;
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+Mcache example in a lite_app
+
+=head1 SYNOPSIS
+
+  $ perl -I../lib myapp.pl get /abc
+
+=head1 DESCRIPTION
+
+L<Mojolicious::Plugin::Mcache> is a L<Mojolicious> plugin.
+
+=cut
