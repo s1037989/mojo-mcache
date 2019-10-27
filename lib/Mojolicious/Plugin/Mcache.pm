@@ -7,7 +7,7 @@ sub register {
   my ($self, $app, $conf) = @_;
   push @{$app->commands->namespaces}, 'Mojo::Mcache::Command';
   $conf = $conf ? ref $conf eq 'SCALAR' ? {sock => $$conf} : $conf : {};
-  my $mcache = Mojo::Mcache->new(%$conf)->app($app);
+  my $mcache = Mojo::Mcache->new($app, $conf);
   $app->helper(mcache => sub { $mcache->client });
   $app->routes->route('/mcache')->detour(app => $mcache->server) unless $mcache->sock;
 }

@@ -3,6 +3,8 @@ use Mojo::Base 'Mojolicious';
 
 use Storable;
 
+use constant DEBUG => $ENV{MCACHE_SERVER_DEBUG} || 0;
+
 has mcache => undef, weak => 1;
 
 sub startup {
@@ -19,18 +21,19 @@ sub startup {
 
   my $r = $self->routes;
 
-  $r->get('/')->to('read#ids');
-  $r->get('/:id')->to('read#id');
-  $r->post('/')->to('write#post');
-  $r->put('/:id')->to('write#put');
-  $r->put('/')->to(cb => sub {
+  $r->get('/:table', {table => 'default'})->to('read#get_keys');
+  $r->get('/:table/:id', {table => 'default'})->to('read#get_one');
+  $r->post('/:table', {table => 'default'})->to('write#post');
+  $r->put('/:table', {table => 'default'})->to(cb => sub {
     my $c = shift;
     my $keys = scalar keys %$mcache;
+    warn Mojo::Util::dumper({store => $mcache}) if DEBUG > 1;
     $c->log->debug("Storing $keys keys");
     store $mcache, $file;
     $c->render(json => {stored => $keys});
   });
-  $r->delete('/:id')->to('write#del');
+  $r->put('/:table/:id', {table => 'default'})->to('write#put');
+  $r->delete('/:table/:id', {table => 'default'})->to('write#del');
 }
 
 1;
