@@ -26,9 +26,10 @@ sub startup {
   $r->post('/:table', {table => 'default'})->to('write#post');
   $r->put('/:table', {table => 'default'})->to(cb => sub {
     my $c = shift;
-    my $keys = scalar keys %$mcache;
+    my $table = $self->mcache->table;
+    my $keys = scalar keys $mcache->{$table}->%*;
     warn Mojo::Util::dumper({store => $mcache}) if DEBUG > 1;
-    $c->log->debug("Storing $keys keys");
+    $c->log->debug("Storing $keys $table keys");
     store $mcache, $file;
     $c->render(json => {stored => $keys});
   });
