@@ -13,26 +13,26 @@ sub startup {
   my $file = $self->mcache->file;
   my $mcache = -e $file ? retrieve $file : {};
   $self->helper(mcache => sub { $mcache });
-  Mojo::IOLoop->recurring($self->mcache->freq => sub {
-    my $keys = scalar keys %$mcache;
-    $self->log->debug("Storing $keys keys");
-    store $mcache, $file;
-  });
-
-  my $r = $self->routes;
-
-  $r->get('/:table', {table => 'default'})->to('read#get_keys');
-  $r->get('/:table/:id', {table => 'default'})->to('read#get_one');
-  $r->post('/:table', {table => 'default'})->to('write#post');
-  $r->put('/:table', {table => 'default'})->to(cb => sub {
+  $self->mcache->app->hook(after_dispatch => sub {
     my $c = shift;
     my $table = $self->mcache->table;
     my $keys = scalar keys $mcache->{$table}->%*;
     warn Mojo::Util::dumper({store => $mcache}) if DEBUG > 1;
     $c->log->debug("Storing $keys $table keys");
     store $mcache, $file;
-    $c->render(json => {stored => $keys});
-  });
+    warn Mojo::Util::dumper({tables => $keys}) if DEBUG;
+  }) unless $self->mcache->sock;
+  Mojo::IOLoop->recurring($self->mcache->freq => sub {
+    my $keys = scalar keys %$mcache;
+    $self->log->debug("Storing $keys tables");
+    store $mcache, $file;
+  }) if $self->mcache->sock;
+
+  my $r = $self->routes;
+
+  $r->get('/:table', {table => 'default'})->to('read#get_keys');
+  $r->get('/:table/:id', {table => 'default'})->to('read#get_one');
+  $r->post('/:table', {table => 'default'})->to('write#post');
   $r->put('/:table/:id', {table => 'default'})->to('write#put');
   $r->delete('/:table/:id', {table => 'default'})->to('write#del');
 }

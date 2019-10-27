@@ -3,14 +3,12 @@ use Mojo::Base 'Blog::Model';
 
 sub add {
   my ($self, $post) = @_;
-  my $id = $self->mcache->post($post)->{id};
-  $self->mcache->put;
-  return $id;
+  return $self->mcache->post($post)->{id};
 }
 
 sub all {
   my ($self, $id) = @_;
-  return $self->mcache->get;
+  return [map { $self->mcache->get($_) } $self->mcache->get->@*];
 }
 
 sub find {

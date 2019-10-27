@@ -10,9 +10,7 @@ sub edit {
 
 sub index {
   my $self = shift;
-  warn Mojo::Util::dumper($self->posts->add({a => 1}));
-  warn Mojo::Util::dumper($self->posts->all);
-  $self->render(posts => []);#$self->posts->all);
+  $self->render(posts => $self->posts->all);
 }
 
 sub remove {
@@ -51,6 +49,7 @@ sub _validation {
   my $self = shift;
 
   my $v = $self->validation;
+  $v->optional('id');
   $v->required('title');
   $v->required('body');
 

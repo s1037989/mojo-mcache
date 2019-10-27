@@ -19,7 +19,7 @@ sub put ($self, @) {
   my $id = $self->param('id');
   warn "[server-write-put] Table: $table | ID: $id" if DEBUG;
   return $self->reply->not_found unless $self->mcache->{$table}->{$id};
-  $self->mcache->{$table}->{$id} = $self->req->json;
+  $self->mcache->{$table}->{$id} = {id => $id, $self->req->json->%*};
   warn Mojo::Util::dumper({mcache => $self->mcache->{$table}}) if DEBUG > 1;
   $self->render(json => $self->mcache->{$table}->{$id});
 }

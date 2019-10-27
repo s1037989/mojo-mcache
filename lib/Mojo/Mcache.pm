@@ -10,7 +10,7 @@ our $VERSION = '0.01';
 
 has client => sub { state $client = Mojo::Mcache::Client->new(mcache => shift) };
 has file => sub { shift->app->home->child('mcache.cache') };
-has freq => 3;
+has freq => 30;
 has server => sub { state $server = Mojo::Mcache::Server->new(mcache => shift) };
 has sock => 'http+unix://mcache.sock';
 has ua =>

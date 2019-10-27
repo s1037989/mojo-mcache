@@ -10,6 +10,7 @@ sub startup {
 
   # Configuration
   $self->plugin('Config');
+  $self->plugin('ReverseProxyWithPath');
   $self->plugin('Mcache' => \'');
   $self->secrets($self->config('secrets'));
 

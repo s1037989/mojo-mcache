@@ -2,25 +2,16 @@ use Mojo::Base -strict;
 
 use Test::More;
 
-# This test requires a PostgreSQL connection string for an existing database
-#
-#   TEST_ONLINE=postgres://tester:testing@/test script/blog test
-#
-plan skip_all => 'set TEST_ONLINE to enable this test' unless $ENV{TEST_ONLINE};
-
-use Mojo::Pg;
 use Mojo::URL;
 use Test::Mojo;
 
-# Isolate tests
-my $url
-  = Mojo::URL->new($ENV{TEST_ONLINE})->query([search_path => 'mojo_blog_test']);
-my $pg = Mojo::Pg->new($url);
-$pg->db->query('drop schema if exists mojo_blog_test cascade');
-$pg->db->query('create schema mojo_blog_test');
+use constant DEBUG => $ENV{MCACHE_DEBUG} || 0;
 
 # Override configuration for testing
-my $t = Test::Mojo->new(Blog => {pg => $url, secrets => ['test_s3cret']});
+my $t = Test::Mojo->new(Blog => {secrets => ['test_s3cret']});
+unlink $t->app->mcache->mcache->file;
+$t->app->log->level('debug')->unsubscribe('message') unless DEBUG;
+$t->app->mcache->mcache->server->app->log->level('debug')->unsubscribe('message') unless DEBUG;
 $t->ua->max_redirects(10);
 
 # No posts yet
@@ -31,7 +22,7 @@ $t->get_ok('/')->status_is(200)->text_is('title' => 'Blog')
 $t->get_ok('/posts/create')->status_is(200)->text_is('title' => 'New post')
   ->element_exists('form input[name=title]')
   ->element_exists('form textarea[name=body]');
-$t->post_ok('/posts' => form => {title => 'Testing', body => 'This is a test.'})
+$t->post_ok('/posts' => form => {id => 1, title => 'Testing', body => 'This is a test.'})
   ->status_is(200)->text_is('title' => 'Testing')->text_is('h2' => 'Testing')
   ->text_like('p' => qr/This is a test/);
 
@@ -51,6 +42,7 @@ $t->post_ok(
   '/posts/1?_method=PUT' => form => {title => 'Again', body => 'It works.'})
   ->status_is(200)->text_is('title' => 'Again')->text_is('h2' => 'Again')
   ->text_like('p' => qr/It works/);
+
 $t->get_ok('/posts/1')->status_is(200)->text_is('title' => 'Again')
   ->text_is('h2' => 'Again')->text_like('p' => qr/It works/);
 
@@ -58,7 +50,6 @@ $t->get_ok('/posts/1')->status_is(200)->text_is('title' => 'Again')
 $t->post_ok('/posts/1?_method=DELETE')->status_is(200)
   ->text_is('title' => 'Blog')->element_exists_not('h2');
 
-# Clean up once we are done
-$pg->db->query('drop schema mojo_blog_test cascade');
+unlink $t->app->mcache->mcache->file;
 
 done_testing();
