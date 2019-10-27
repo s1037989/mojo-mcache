@@ -13,6 +13,15 @@ sub startup {
   my $file = $self->mcache->file;
   my $mcache = -e $file ? retrieve $file : {};
   $self->helper(mcache => sub { $mcache });
+  $self->hook(after_dispatch => sub {
+    my $c = shift;
+    my $table = $self->mcache->table;
+    my $keys = scalar keys $mcache->{$table}->%*;
+    warn Mojo::Util::dumper({store => $mcache}) if DEBUG > 1;
+    $c->log->debug("Storing $keys $table keys");
+    store $mcache, $file;
+    warn Mojo::Util::dumper({tables => $keys}) if DEBUG;
+  }) unless $self->mcache->sock;
   $self->mcache->app->hook(after_dispatch => sub {
     my $c = shift;
     my $table = $self->mcache->table;

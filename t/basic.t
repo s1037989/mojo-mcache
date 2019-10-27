@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 34;
+use Test::More tests => 27;
 use Mojolicious::Lite;
 use Test::Mojo;
 
@@ -23,12 +23,9 @@ $t->post_ok('/mcache/default' => json => {a=>1, id=>1})->status_is(200)->json_ha
 $t->get_ok('/mcache/default')->status_is(200)->json_has('/0', 'not null');
 $t->get_ok('/mcache/default/1')->status_is(200)->json_has('/id', 'has id');
 $t->delete_ok('/mcache/default/1')->status_is(200)->json_hasnt('/0', 'null');
-$t->put_ok('/mcache')->status_is(200)->json_like('/stored' => qr/^\d+$/, 'stored keys');
 ok -f app->mcache->mcache->file, 'storable cache exists';
 ok unlink(app->mcache->mcache->file), 'removed storable cache';
 ok !-f app->mcache->mcache->file, 'storable cache removed';
-$t->put_ok('/mcache')->status_is(200)->json_like('/stored' => qr/^\d+$/, 'stored keys');
-ok -f app->mcache->mcache->file, 'storable cache exists again';
 $t->get_ok('/mcache/default')->status_is(200)->json_has('/0', 'not null');
 $t->get_ok("/mcache/default/$post->{id}")->status_is(200)->json_has('/id', 'has id');
 ok unlink(app->mcache->mcache->file), 'removed storable cache again';
